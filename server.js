@@ -1,5 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2');
+const path = require('path');
 const app = express();
 const port = 3000;
 
@@ -17,13 +18,19 @@ db.connect((err) => {
     console.log('Connected to MySQL.');
 });
 
-app.get('/', (req, res) => {
+// Serve static files from the 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Middleware to parse JSON
+app.use(express.json());
+
+// API endpoint to fetch events
+app.get('/dbevents', (req, res) => {
     const query = `
-        SELECT e.id, e.season, e.status, e.time_venue_utc, e.date_venue, 
-               v.name AS stadium, 
-               ht.name AS home_team, at.name AS away_team, 
-               e.home_goals, e.away_goals, e.winner, 
-               e.stage_name, s.competition_name
+        SELECT e.date_venue AS date, e.time_venue_utc AS time, 
+               s.competition_name AS sport, v.name AS venue, 
+               ht.name AS team1, at.name AS team2, 
+               CONCAT(ht.name, ' vs ', at.name) AS description
         FROM events e
         LEFT JOIN venues v ON e.stadium_id = v.id
         LEFT JOIN teams ht ON e.home_team_id = ht.id
@@ -40,6 +47,105 @@ app.get('/', (req, res) => {
         }
     });
 });
+
+// API endpoint to fetch venues
+app.get('/venues', (req, res) => {
+    db.query('SELECT id, name FROM venues', (err, results) => {
+        if (err) {
+            console.error('Error fetching venues:', err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// API endpoint to fetch teams
+app.get('/teams', (req, res) => {
+    db.query('SELECT id, name FROM teams', (err, results) => {
+        if (err) {
+            console.error('Error fetching teams:', err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+app.post('/add-event', (req, res) => {
+    const { date, time, venue, home_team, away_team } = req.body;
+
+    // Query to get the last inserted competition_id from the sports table
+    db.query('SELECT MAX(id) AS last_competition_id FROM sports', (err, result) => {
+        if (err) {
+            console.error('Error fetching competition_id:', err.message);
+            return res.status(500).send('Failed to get competition_id');
+        }
+
+        const competition_id = result[0].last_competition_id;
+
+        // If no competition_id exists, return an error
+        if (!competition_id) {
+            return res.status(400).send('No competition found in sports table');
+        }
+
+        // Insert the new event with the automatically fetched competition_id
+        const query = `
+            INSERT INTO events (date_venue, time_venue_utc, competition_id, stadium_id, home_team_id, away_team_id)
+            VALUES (?, ?, ?, NULLIF(?, ''), NULLIF(?, ''), ?);
+        `;
+        const values = [
+            date,
+            time,
+            competition_id, // Use the last competition_id from sports table
+            venue || null,   // Allow null for venue
+            home_team || null, // Allow null for home_team
+            away_team
+        ];
+
+        db.query(query, values, (err, result) => {
+            if (err) {
+                console.error('Error adding event:', err.message);
+                return res.status(500).send('Failed to add event');
+            }
+            res.status(201).send('Event added successfully');
+        });
+    });
+});
+
+// API endpoint to fetch a single event by ID
+app.get('/event/:id', (req, res) => {
+    const eventId = req.params.id;  // Get the event ID from the URL parameter
+
+    // SQL query to fetch the event based on ID
+    const query = `
+        SELECT e.date_venue AS date, e.time_venue_utc AS time, 
+               s.competition_name AS sport, v.name AS venue, 
+               ht.name AS team1, at.name AS team2, 
+               CONCAT(ht.name, ' vs ', at.name) AS description
+        FROM events e
+        LEFT JOIN venues v ON e.stadium_id = v.id
+        LEFT JOIN teams ht ON e.home_team_id = ht.id
+        LEFT JOIN teams at ON e.away_team_id = at.id
+        LEFT JOIN sports s ON e.competition_id = s.id
+        WHERE e.id = ?;
+    `;
+    
+    // Execute the query to get the event data
+    db.query(query, [eventId], (err, results) => {
+        if (err) {
+            console.error('Error fetching event:', err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            if (results.length > 0) {
+                res.json(results[0]);  // Return the first event result as JSON
+            } else {
+                res.status(404).send('Event not found');
+            }
+        }
+    });
+});
+
 
 // Handle 404 errors for undefined routes
 app.use((req, res) => {

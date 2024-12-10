@@ -4,15 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Event Calendar</title>
-    <style>
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        th { background-color: #f4f4f4; }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="stylesNavBar.css">      
+    <!-- Adding Flatpickr css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
-    <h1>Sports Event Calendar</h1>
-    <table>
+
+    <nav>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Events</a></li>
+            <li><a href="#">Teams</a></li>
+            <li><a href="#">Venues</a></li>
+            <li><a href="#">Add Event</a></li>
+        </ul>
+    </nav>
+
+    <div class="table-title">
+        <h3>Sports Events List</h3>
+    </div>
+
+    <table class="table-fill">
         <thead>
             <tr>
                 <th>Date</th>
@@ -25,25 +38,44 @@
         </thead>
         <tbody id="events-table"></tbody>
     </table>
-    <script>
-        fetch('http://localhost:3000')
-            .then(response => response.json())
-            .then(events => {
-                const tableBody = document.getElementById('events-table');
-                events.forEach(event => {
-                    const row = `
-                        <tr>
-                            <td>${event.date}</td>
-                            <td>${event.time}</td>
-                            <td>${event.sport}</td>
-                            <td>${event.venue}</td>
-                            <td>${event.team1} vs ${event.team2}</td>
-                            <td>${event.description}</td>
-                        </tr>
-                    `;
-                    tableBody.innerHTML += row;
-                });
-            });
-    </script>
+    
+    <!-- Button to fetch a specific event by ID -->
+    <button id="fetch-event-btn">Fetch 1 Event Only</button>
+
+    <!-- Table to display the fetched event -->
+    <table class="table-fill" id="event-table" style="display:none;">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Sport</th>
+                <th>Venue</th>
+                <th>Teams</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody id="event-table-body"></tbody>
+    </table>
+
+    <div class="form-container">
+        <h3>Add New Event</h3>
+        <form id="add-event-form">
+            <label for="date">Date:</label>
+            <input type="text" id="date" name="date" required><br>
+
+            <label for="time">Time (UTC):</label>
+            <input type="text" id="time" name="time" required><br>
+
+            <label for="away_team">Away Team:</label>
+            <select id="away_team" name="away_team" required>
+                <!-- Team options populated dynamically -->
+            </select><br>
+
+            <button type="submit">Add Event</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="script.js"></script>
 </body>
 </html>
