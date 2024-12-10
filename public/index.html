@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Event Calendar</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">   
+    <!-- Add Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
     <div class="table-title">
@@ -23,7 +25,28 @@
         </thead>
         <tbody id="events-table"></tbody>
     </table>
+
+    <div class="form-container">
+        <h3>Add New Event</h3>
+        <form id="add-event-form">
+            <label for="date">Date:</label>
+            <input type="text" id="date" name="date" required><br>
+
+            <label for="time">Time (UTC):</label>
+            <input type="text" id="time" name="time" required><br>
+
+            <label for="away_team">Away Team:</label>
+            <select id="away_team" name="away_team" required>
+                <!-- Team options populated dynamically -->
+            </select><br>
+
+            <button type="submit">Add Event</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        // Fetch and display events
         fetch('http://localhost:3000/dbevents')
             .then(response => response.json())
             .then(events => {
@@ -46,6 +69,59 @@
                 console.error('Error fetching events:', error);
                 alert('Failed to fetch events. Check the console for more details.');
             });
+
+        // Populate dropdowns for teams
+        fetch('http://localhost:3000/teams')
+            .then(response => response.json())
+            .then(teams => {
+                const awayTeamDropdown = document.getElementById('away_team');
+                teams.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team.id;
+                    option.textContent = team.name;
+                    awayTeamDropdown.appendChild(option);
+                });
+            });
+
+        // Initialize Flatpickr on the date and time input fields
+        flatpickr("#date", {
+            enableTime: false, // Only date picker (no time)
+            dateFormat: "Y-m-d", // Format the date as Year-Month-Day
+            minDate: "today", // Disable past dates
+        });
+
+        flatpickr("#time", {
+            enableTime: true, // Enable time picker
+            noCalendar: true, // Disable calendar
+            dateFormat: "H:i", // Time format (24-hour)
+            time_24hr: true, // Enable 24-hour format
+        });
+
+        // Handle new event submission
+        document.getElementById('add-event-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const formData = {
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                away_team: document.getElementById('away_team').value,
+            };
+
+            fetch('http://localhost:3000/add-event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to add event');
+                    alert('Event added successfully!');
+                    window.location.reload(); // Reload to display the new event
+                })
+                .catch(error => {
+                    console.error('Error adding event:', error);
+                    alert('Failed to add event. Check the console for more details.');
+                });
+        });
     </script>
 </body>
 </html>
