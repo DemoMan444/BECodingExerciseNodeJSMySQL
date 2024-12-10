@@ -4,14 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Event Calendar</title>
-    <link rel="stylesheet" href="style.css">   
-    <!-- Add Flatpickr CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="stylesNavBar.css">      
+    <!-- Adding Flatpickr css -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
+
+    <nav>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Events</a></li>
+            <li><a href="#">Teams</a></li>
+            <li><a href="#">Venues</a></li>
+            <li><a href="#">Add Event</a></li>
+        </ul>
+    </nav>
+
     <div class="table-title">
         <h3>Sports Events List</h3>
     </div>
+
     <table class="table-fill">
         <thead>
             <tr>
@@ -24,6 +37,24 @@
             </tr>
         </thead>
         <tbody id="events-table"></tbody>
+    </table>
+    
+    <!-- Button to fetch a specific event by ID -->
+    <button id="fetch-event-btn">Fetch 1 Event Only</button>
+
+    <!-- Table to display the fetched event -->
+    <table class="table-fill" id="event-table" style="display:none;">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Sport</th>
+                <th>Venue</th>
+                <th>Teams</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody id="event-table-body"></tbody>
     </table>
 
     <div class="form-container">
@@ -121,6 +152,40 @@
                     console.error('Error adding event:', error);
                     alert('Failed to add event. Check the console for more details.');
                 });
+        });
+
+
+        // Fetch a specific event when button is clicked
+        document.getElementById('fetch-event-btn').addEventListener('click', () => {
+            const eventId = prompt("Enter Event ID to fetch:"); // Prompt user to enter event ID
+
+            if (eventId) {
+                fetch(`http://localhost:3000/event/${eventId}`)
+                    .then(response => response.json())
+                    .then(event => {
+                        if (event) {
+                            const tableBody = document.getElementById('event-table-body');
+                            const row = `
+                                <tr>
+                                    <td>${event.date || 'N/A'}</td>
+                                    <td>${event.time || 'N/A'}</td>
+                                    <td>${event.sport || 'N/A'}</td>
+                                    <td>${event.venue || 'N/A'}</td>
+                                    <td>${event.team1 || 'N/A'} vs ${event.team2 || 'N/A'}</td>
+                                    <td>${event.description || 'N/A'}</td>
+                                </tr>
+                            `;
+                            tableBody.innerHTML = row;  // Update the table with event data
+                            document.getElementById('event-table').style.display = 'block'; // Show the table
+                        } else {
+                            alert('Event not found!');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching event:', error);
+                        alert('Failed to fetch event. Check the console for more details.');
+                    });
+            }
         });
     </script>
 </body>

@@ -113,6 +113,40 @@ app.post('/add-event', (req, res) => {
     });
 });
 
+// API endpoint to fetch a single event by ID
+app.get('/event/:id', (req, res) => {
+    const eventId = req.params.id;  // Get the event ID from the URL parameter
+
+    // SQL query to fetch the event based on ID
+    const query = `
+        SELECT e.date_venue AS date, e.time_venue_utc AS time, 
+               s.competition_name AS sport, v.name AS venue, 
+               ht.name AS team1, at.name AS team2, 
+               CONCAT(ht.name, ' vs ', at.name) AS description
+        FROM events e
+        LEFT JOIN venues v ON e.stadium_id = v.id
+        LEFT JOIN teams ht ON e.home_team_id = ht.id
+        LEFT JOIN teams at ON e.away_team_id = at.id
+        LEFT JOIN sports s ON e.competition_id = s.id
+        WHERE e.id = ?;
+    `;
+    
+    // Execute the query to get the event data
+    db.query(query, [eventId], (err, results) => {
+        if (err) {
+            console.error('Error fetching event:', err.message);
+            res.status(500).send('Internal Server Error');
+        } else {
+            if (results.length > 0) {
+                res.json(results[0]);  // Return the first event result as JSON
+            } else {
+                res.status(404).send('Event not found');
+            }
+        }
+    });
+});
+
+
 // Handle 404 errors for undefined routes
 app.use((req, res) => {
     res.status(404).send('This page does not exist.');
