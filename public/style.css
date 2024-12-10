@@ -1,0 +1,112 @@
+body {
+    background-color: #dde4e300;
+    font-family: sans-serif, helvetica, arial;
+    font-size: 16px;
+    text-rendering: optimizeLegibility;
+}
+  
+div.table-title {
+  display: block;
+  margin: auto;
+  max-width: 500px;
+  width: 100%;
+  padding: 3px;
+}
+  
+.table-title h3 {
+  color: #000000;
+  font-size: 25px;
+  font-style: normal;
+  font-family: sans-serif, helvetica, arial;
+  text-transform: uppercase;
+}
+  
+/* Rounded corners to the whole table */
+.table-fill {
+  background: white;
+  border-radius: 12px; /* Increased border radius */
+  border-collapse: collapse;
+  margin: auto;
+  max-width: 500px;
+  width: 100%;
+  animation: float 5s infinite;
+}
+  
+/* Table header styles */
+th {
+  color: #ffffff;
+  background: #2c509a;
+  border-bottom: 4px solid #000000;
+  font-size: 20px;
+  padding: 18px;
+  text-align: left;
+  vertical-align: middle;
+}
+  
+th:first-child {
+  border-top-left-radius: 12px; /* Apply rounded left corners */
+}
+  
+th:last-child {
+  border-top-right-radius: 12px; /* Apply rounded right corners */
+}
+  
+/* Table row styles */
+tr {
+  border-top: 1px solid #000000;
+  color: #000000;
+  font-size: 16px;
+  text-shadow: 0 1px 1px rgba(256, 256, 256, 0.1);
+}
+  
+/* Hover effect for rows */
+tr:hover td {
+  background: #f3feff;
+  color: #000000;
+  border-top: 1px solid #060606;
+}
+  
+tr:first-child {
+  border-top: none;
+}
+  
+tr:last-child {
+  border-bottom: none;
+}
+  
+/* Table data cell styles */
+td {
+  background: #FFFFFF;
+  padding: 18px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 15px;
+  border-right: 1px solid #C1C3D1;
+}
+  
+/* Remove right border */
+td:last-child {
+  border-right: 0px;
+}
+  
+/* Apply rounded corners to the last row */
+tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+  
+tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
+  
+/* Responsive Styles */
+@media screen and (max-width: 768px) {
+  .table-fill {
+    width: 100%;
+  }
+  
+  th, td {
+    font-size: 14px;
+
+  }
+}
+  

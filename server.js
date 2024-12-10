@@ -1,5 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2');
+const path = require('path');
 const app = express();
 const port = 3000;
 
@@ -17,13 +18,16 @@ db.connect((err) => {
     console.log('Connected to MySQL.');
 });
 
-app.get('/', (req, res) => {
+// Serve static files from the 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API endpoint to fetch data from the database
+app.get('/dbevents', (req, res) => {
     const query = `
-        SELECT e.id, e.season, e.status, e.time_venue_utc, e.date_venue, 
-               v.name AS stadium, 
-               ht.name AS home_team, at.name AS away_team, 
-               e.home_goals, e.away_goals, e.winner, 
-               e.stage_name, s.competition_name
+        SELECT e.date_venue AS date, e.time_venue_utc AS time, 
+               s.competition_name AS sport, v.name AS venue, 
+               ht.name AS team1, at.name AS team2, 
+               CONCAT(ht.name, ' vs ', at.name) AS description
         FROM events e
         LEFT JOIN venues v ON e.stadium_id = v.id
         LEFT JOIN teams ht ON e.home_team_id = ht.id
